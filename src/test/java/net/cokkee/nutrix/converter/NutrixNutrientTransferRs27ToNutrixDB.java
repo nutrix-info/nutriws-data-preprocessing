@@ -66,10 +66,6 @@ public class NutrixNutrientTransferRs27ToNutrixDB {
             
             connection = DriverManager.getConnection( database , "", "");
         } catch(Exception e) {
-//            System.out.println(MessageFormat.format(
-//                    "Error on initializing JdbcOdbcDriver class. Exception {0}",
-//                    new Object[] {e.getMessage()}
-//            ));
             log.error(MessageFormat.format(
                     "Error on initializing JdbcOdbcDriver class. Exception {0}",
                     new Object[]{e.getMessage()}
@@ -180,11 +176,10 @@ public class NutrixNutrientTransferRs27ToNutrixDB {
                     log.debug("==@ All thing done!");
                 }
             } catch(Exception e){
-//                e.printStackTrace();
-//                System.out.println("Error!");
-                if (log.isDebugEnabled()){
-                    log.debug("Error!");
-                }
+                log.error(MessageFormat.format(
+                        "Error on updating data from rs27 to nutriws. Exception {0}",
+                        new Object[] {e.getMessage()}
+                ));
             }
         }
     }
@@ -266,11 +261,10 @@ public class NutrixNutrientTransferRs27ToNutrixDB {
                     log.debug("==@ All thing done!");
                 }
             } catch(Exception e){
-//                e.printStackTrace();
-//                System.out.println("Error!");
-                if (log.isDebugEnabled()){
-                    log.debug("Error");
-                }
+                log.error(MessageFormat.format(
+                        "Error on inserting data from rs27 to nutriws. Exception {0}",
+                        new Object[] {e.getMessage()}
+                ));
             }
         }
     }
