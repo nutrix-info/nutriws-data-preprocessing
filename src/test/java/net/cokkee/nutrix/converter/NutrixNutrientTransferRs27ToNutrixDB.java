@@ -28,6 +28,8 @@ public class NutrixNutrientTransferRs27ToNutrixDB {
     
     private static Log log = LogFactory.getLog(NutrixNutrientTransferRs27ToNutrixDB.class);
 
+    private int TRANSFERRING_MODE = 0;
+    
     static Connection connection;
     static Statement statement;
     
@@ -64,10 +66,15 @@ public class NutrixNutrientTransferRs27ToNutrixDB {
             
             connection = DriverManager.getConnection( database , "", "");
         } catch(Exception e) {
-            System.out.println(MessageFormat.format(
+//            System.out.println(MessageFormat.format(
+//                    "Error on initializing JdbcOdbcDriver class. Exception {0}",
+//                    new Object[] {e.getMessage()}
+//            ));
+            log.error(MessageFormat.format(
                     "Error on initializing JdbcOdbcDriver class. Exception {0}",
-                    new Object[] {e.getMessage()}
+                    new Object[]{e.getMessage()}
             ));
+        
         }
     }
     
@@ -89,86 +96,182 @@ public class NutrixNutrientTransferRs27ToNutrixDB {
     
     @Before
     public void init() {
-        Response response = RestAssured.
-                given().
-                contentType("application/json").
-                expect().
-                when().
-                get(serviceUrl("nutrient/find"));
-        
-        Assert.assertTrue(response.getStatusCode() == 200);
-        
-        String responseBody = response.getBody().asString();
-        JsonPath jsonPath = new JsonPath(responseBody);
-        
-        int total = jsonPath.getInt("total");
-        for(int i=0; i<total; i++) {
-            String id = (jsonPath.getString("collection[" + i + "].id"));
-            if (log.isDebugEnabled()) {
-                log.debug("Nutrient#" + id + " will be deleted");
+    }
+    
+    @Test
+    public void update_nutrient_records_from_rs27db_to_nutrixdb() {
+        if (TRANSFERRING_MODE == 0) {
+            try {
+                if (log.isDebugEnabled()) {
+                    log.debug("==@ updating nutrient records start...");
+                }
+
+                Statement st = connection.createStatement();
+                ResultSet rs = st.executeQuery("SELECT * FROM NUTR_DEF");
+
+                if (log.isDebugEnabled()) {
+                    log.debug("==@ looping on RecordSet...");
+                }
+                int count = 0;
+                while(rs.next()) {
+                    count++;
+                    NutrixNutrientDTO item = 
+                            new NutrixNutrientDTO(rs.getString("Tagname"), 
+                                    rs.getString("NutrDesc"), 
+                                    1, 
+                                    rs.getString("Units"), 
+                                    Byte.valueOf(rs.getString("Num_Dec")), 
+                                    Integer.valueOf(rs.getString("Nutr_No")));
+
+                    if (item.getCode() == null || item.getCode().length() == 0) {
+                        item.setCode(item.getName());
+                    }
+
+                    if (log.isDebugEnabled()) {
+                        log.debug("==@ item#" + item.getCode());
+                    }
+
+                    // try to get the nutrient object from nutriWS...
+                    Response res4Get = RestAssured.
+                        given().
+                        contentType("application/json").
+                        expect().
+                        when().
+                        get(serviceUrl("nutrient/getbycode/" + item.getCode()));
+                    
+                    if (res4Get.getStatusCode() == 200) {
+                        String responseBody = res4Get.getBody().asString();
+                        JsonPath jsonPath = new JsonPath(responseBody);
+                        String id = jsonPath.getString("id");
+                        
+                        if (log.isDebugEnabled()) {
+                            log.debug("==@ item#" + item.getCode() + 
+                                    " has already been available - id:" + id);
+                        }
+                        
+                        item.setId(id);
+                        Response response = RestAssured.
+                            given().
+                            contentType("application/json").
+                            body(NutrixDataUtil.convertObjectToJson(item)).
+                            when().
+                            put(serviceUrl("nutrient/crud/" + item.getId()));
+                        
+                    } else {
+                        if (log.isDebugEnabled()) {
+                            log.debug("==@ item#" + item.getCode() + 
+                                    " has not been exist. I will be inserted");
+                        }
+                        
+                        Response response = RestAssured.
+                            given().
+                            contentType("application/json").
+                            body(NutrixDataUtil.convertObjectToJson(item)).
+                            when().
+                            post(serviceUrl("nutrient/crud"));
+                    }
+
+                    if (log.isDebugEnabled()) {
+                        log.debug("  -> item#" + item.getCode() + " has been transferred");
+                    }
+                }
+
+                if (log.isDebugEnabled()) {
+                    log.debug("==@ All thing done!");
+                }
+            } catch(Exception e){
+//                e.printStackTrace();
+//                System.out.println("Error!");
+                if (log.isDebugEnabled()){
+                    log.debug("Error!");
+                }
             }
-            
-            RestAssured.
-                given().
-                contentType("application/json").
-                when().
-                delete(serviceUrl("nutrient/crud/" + id));
         }
     }
     
     @Test
-    public void transfer() {}
-    
-    //@Test
     public void transfer_nutrient_records_from_rs27db_to_nutrixdb() {
-        try {
-            if (log.isDebugEnabled()) {
-                log.debug("==@ transfering nutrient records start...");
-            }
-            
-            Statement st = connection.createStatement();
-            ResultSet rs = st.executeQuery("SELECT * FROM NUTR_DEF");
-            
-            if (log.isDebugEnabled()) {
-                log.debug("==@ looping on RecordSet...");
-            }
-            int count = 0;
-            while(rs.next()) {
-                count++;
-                NutrixNutrientDTO item = 
-                        new NutrixNutrientDTO(rs.getString("Tagname"), 
-                                rs.getString("NutrDesc"), 
-                                1, 
-                                rs.getString("Units"), 
-                                Byte.valueOf(rs.getString("Num_Dec")), 
-                                Integer.valueOf(rs.getString("Nutr_No")));
-                
-                if (item.getCode() == null || item.getCode().length() == 0) {
-                    item.setCode(item.getName());
-                }
-                
-                if (log.isDebugEnabled()) {
-                    log.debug("==@ item#" + item.getCode());
-                }
-                
-                Response response = RestAssured.
+        if (TRANSFERRING_MODE == 1) {
+            Response response = RestAssured.
                     given().
                     contentType("application/json").
-                    body(NutrixDataUtil.convertObjectToJson(item)).
+                    expect().
                     when().
-                    post(serviceUrl("nutrient/crud"));
-                
+                    get(serviceUrl("nutrient/find"));
+
+            Assert.assertTrue(response.getStatusCode() == 200);
+
+            String responseBody = response.getBody().asString();
+            JsonPath jsonPath = new JsonPath(responseBody);
+
+            int total = jsonPath.getInt("total");
+            for(int i=0; i<total; i++) {
+                String id = (jsonPath.getString("collection[" + i + "].id"));
                 if (log.isDebugEnabled()) {
-                    log.debug("  -> item#" + item.getCode() + " had been inserted");
+                    log.debug("Nutrient#" + id + " will be deleted");
+                }
+
+                RestAssured.
+                    given().
+                    contentType("application/json").
+                    when().
+                    delete(serviceUrl("nutrient/crud/" + id));
+            }
+        }
+        
+        if (TRANSFERRING_MODE == 1) {
+            try {
+                if (log.isDebugEnabled()) {
+                    log.debug("==@ transfering nutrient records start...");
+                }
+
+                Statement st = connection.createStatement();
+                ResultSet rs = st.executeQuery("SELECT * FROM NUTR_DEF");
+
+                if (log.isDebugEnabled()) {
+                    log.debug("==@ looping on RecordSet...");
+                }
+                int count = 0;
+                while(rs.next()) {
+                    count++;
+                    NutrixNutrientDTO item = 
+                            new NutrixNutrientDTO(rs.getString("Tagname"), 
+                                    rs.getString("NutrDesc"), 
+                                    1, 
+                                    rs.getString("Units"), 
+                                    Byte.valueOf(rs.getString("Num_Dec")), 
+                                    Integer.valueOf(rs.getString("Nutr_No")));
+
+                    if (item.getCode() == null || item.getCode().length() == 0) {
+                        item.setCode(item.getName());
+                    }
+
+                    if (log.isDebugEnabled()) {
+                        log.debug("==@ item#" + item.getCode());
+                    }
+
+                    Response response = RestAssured.
+                        given().
+                        contentType("application/json").
+                        body(NutrixDataUtil.convertObjectToJson(item)).
+                        when().
+                        post(serviceUrl("nutrient/crud"));
+
+                    if (log.isDebugEnabled()) {
+                        log.debug("  -> item#" + item.getCode() + " had been inserted");
+                    }
+                }
+
+                if (log.isDebugEnabled()) {
+                    log.debug("==@ All thing done!");
+                }
+            } catch(Exception e){
+//                e.printStackTrace();
+//                System.out.println("Error!");
+                if (log.isDebugEnabled()){
+                    log.debug("Error");
                 }
             }
-            
-            if (log.isDebugEnabled()) {
-                log.debug("==@ All thing done!");
-            }
-        } catch(Exception e){
-            e.printStackTrace();
-            System.out.println("Error!");
         }
     }
 }
