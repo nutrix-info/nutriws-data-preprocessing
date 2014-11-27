@@ -10,7 +10,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class NutrixNutrientContentDTO extends NutrixAbstractDTO {
     
     private String id;
+
     private Double amount;
+    private Double nutrMin;
+    private Double nutrMax;
+    
+    private Integer numDataPts;
+    private Double stdError;
 
     private String code;
     private String name;
@@ -25,14 +31,32 @@ public class NutrixNutrientContentDTO extends NutrixAbstractDTO {
         this.code = code;
         this.name = name;
     }
+    
+    public NutrixNutrientContentDTO(Double amount, Double nutrMin, Double nutrMax, 
+            Integer numDataPts, Double stdError, String code, String name) {
+        this(amount, code, name);
+        this.nutrMin = nutrMin;
+        this.nutrMax = nutrMax;
+        this.numDataPts = numDataPts;
+        this.stdError = stdError;
+    }
 
     /**
      * This constructor is used for testing setup
+     * @param id
+     * @param amount
+     * @param code
      * @param name
-     * @param description
      */
     public NutrixNutrientContentDTO(String id, Double amount, String code, String name) {
         this(amount, code, name);
+        this.id = id;
+    }
+    
+    public NutrixNutrientContentDTO(String id, 
+            Double amount, Double nutrMin, Double nutrMax, 
+            Integer numDataPts, Double stdError, String code, String name) {
+        this(amount, nutrMin, nutrMax, numDataPts, stdError, code, name);
         this.id = id;
     }
 
@@ -52,6 +76,38 @@ public class NutrixNutrientContentDTO extends NutrixAbstractDTO {
         this.amount = amount;
     }
 
+    public Double getNutrMin() {
+        return nutrMin;
+    }
+
+    public void setNutrMin(Double nutrMin) {
+        this.nutrMin = nutrMin;
+    }
+
+    public Double getNutrMax() {
+        return nutrMax;
+    }
+
+    public void setNutrMax(Double nutrMax) {
+        this.nutrMax = nutrMax;
+    }
+
+    public Integer getNumDataPts() {
+        return numDataPts;
+    }
+
+    public void setNumDataPts(Integer numDataPts) {
+        this.numDataPts = numDataPts;
+    }
+
+    public Double getStdError() {
+        return stdError;
+    }
+
+    public void setStdError(Double stdError) {
+        this.stdError = stdError;
+    }
+    
     public String getCode() {
         return code;
     }

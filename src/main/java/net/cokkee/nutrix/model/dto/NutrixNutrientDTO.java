@@ -18,7 +18,9 @@ public class NutrixNutrientDTO extends NutrixAbstractDTO {
     private Integer originFlag;
     private String unitType;
     private Byte numDec;
-    private Integer usnndbNo;
+    
+    private String refId;
+    private String refDb;
 
     public NutrixNutrientDTO() {
         super();
@@ -32,12 +34,14 @@ public class NutrixNutrientDTO extends NutrixAbstractDTO {
     }
     
     public NutrixNutrientDTO(String code, String name, 
-            Integer originFlag, String unitType, Byte numDec, Integer usnndbNo) {
+            Integer originFlag, String unitType, Byte numDec, 
+            String refId, String refDb) {
         this(code, name, null);
         this.originFlag = originFlag;
         this.unitType = unitType;
         this.numDec = numDec;
-        this.usnndbNo = usnndbNo;
+        this.refId = refId;
+        this.refDb = refDb;
     }
 
     /**
@@ -51,8 +55,9 @@ public class NutrixNutrientDTO extends NutrixAbstractDTO {
     }
 
     public NutrixNutrientDTO(String id, String code, String name, 
-            Integer originFlag, String unitType, Byte numDec, Integer usnndbNo) {
-        this(code, name, originFlag, unitType, numDec, usnndbNo);
+            Integer originFlag, String unitType, Byte numDec, 
+            String refId, String refDb) {
+        this(code, name, originFlag, unitType, numDec, refId, refDb);
         this.id = id;
     }
     
@@ -112,12 +117,20 @@ public class NutrixNutrientDTO extends NutrixAbstractDTO {
         this.numDec = numDec;
     }
 
-    public Integer getUsnndbNo() {
-        return usnndbNo;
+    public String getRefId() {
+        return refId;
     }
 
-    public void setUsnndbNo(Integer usnndbNo) {
-        this.usnndbNo = usnndbNo;
+    public void setRefId(String refId) {
+        this.refId = refId;
+    }
+
+    public String getRefDb() {
+        return refDb;
+    }
+
+    public void setRefDb(String refDb) {
+        this.refDb = refDb;
     }
     
     @XmlRootElement

@@ -11,27 +11,51 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class NutrixIngredientDTO extends NutrixAbstractDTO {
     
     private String id;
+    private String code;
     private String label;
     private String description;
+    
+    private String refId;
+    private String refDb;
+    
     private List<NutrixNutrientContentDTO> nutrientContentList;
 
     public NutrixIngredientDTO() {
         super();
     }
 
-    public NutrixIngredientDTO(String label, String description) {
+    public NutrixIngredientDTO(String code, String label, String description) {
         this();
+        this.code = code;
         this.label = label;
         this.description = description;
     }
-
+    
+    public NutrixIngredientDTO(String code, String label, String description,
+            String refId, String refDb) {
+        this();
+        this.code = code;
+        this.label = label;
+        this.description = description;
+        this.refId = refId;
+        this.refDb = refDb;
+    }
+    
     /**
      * This constructor is used for testing setup
-     * @param label
+     * @param id
+     * @param code (~Short_Desc@rs27)
+     * @param label (~Long_Desc@rs27)
      * @param description
      */
-    public NutrixIngredientDTO(String id, String label, String description) {
-        this(label, description);
+    public NutrixIngredientDTO(String id, String code, String label, String description) {
+        this(code, label, description);
+        this.id = id;
+    }
+    
+    public NutrixIngredientDTO(String id, String code, String label, String description,
+            String refId, String refDb) {
+        this(code, label, description, refId, refDb);
         this.id = id;
     }
 
@@ -43,6 +67,14 @@ public class NutrixIngredientDTO extends NutrixAbstractDTO {
         this.id = id;
     }
 
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+ 
     public String getDescription() {
         return description;
     }
@@ -57,6 +89,22 @@ public class NutrixIngredientDTO extends NutrixAbstractDTO {
 
     public void setLabel(String label) {
         this.label = label;
+    }
+
+    public String getRefId() {
+        return refId;
+    }
+
+    public void setRefId(String refId) {
+        this.refId = refId;
+    }
+
+    public String getRefDb() {
+        return refDb;
+    }
+
+    public void setRefDb(String refDb) {
+        this.refDb = refDb;
     }
 
     public List<NutrixNutrientContentDTO> getNutrientContentList() {
