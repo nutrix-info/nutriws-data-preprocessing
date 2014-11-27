@@ -185,9 +185,10 @@ public class NutrixNutrientTransferRs27ToNutrixDB {
                     log.debug("==@ All thing done!");
                 }
             } catch(Exception e){
-                if (log.isDebugEnabled()){
-                    log.debug("Error!");
-                }
+                log.error(MessageFormat.format(
+                        "Error on updating data from rs27 to nutriws. Exception {0}",
+                        new Object[] {e.getMessage()}
+                ));
             }
         }
     }
@@ -270,9 +271,10 @@ public class NutrixNutrientTransferRs27ToNutrixDB {
                     log.debug("==@ All thing done!");
                 }
             } catch(Exception e){
-                if (log.isDebugEnabled()){
-                    log.debug("Error");
-                }
+                log.error(MessageFormat.format(
+                        "Error on inserting data from rs27 to nutriws. Exception {0}",
+                        new Object[] {e.getMessage()}
+                ));
             }
         }
     }
