@@ -15,7 +15,9 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import net.cokkee.nutrix.model.dto.NutrixIngredientDTO;
 import net.cokkee.nutrix.model.dto.NutrixNutrientContentDTO;
 import net.cokkee.nutrix.util.NutrixConstants;
@@ -287,6 +289,36 @@ public class NutrixNutrientTransferRs27ToNutrixDB {
     public void update_2_ingredient_records_from_rs27db_to_nutrixdb() {
         try {
             if (log.isDebugEnabled()) {
+                log.debug("==@ Loading the Nutrient [refId -> Id] map ...");
+            }
+            
+            Map<String, String> nutriRefMap = new HashMap<String, String>();
+            
+            Response respNutrList = RestAssured.
+                    given().
+                    contentType("application/json").
+                    expect().
+                    when().
+                    get(serviceUrl("nutrient/find"));
+
+            String respNutrBody = respNutrList.getBody().asString();
+            JsonPath jsonNutr = new JsonPath(respNutrBody);
+
+            int total = jsonNutr.getInt("total");
+            for(int i=0; i<total; i++) {
+                String id = (jsonNutr.getString("collection[" + i + "].id"));
+                String refId = (jsonNutr.getString("collection[" + i + "].refId"));
+                
+                if (log.isDebugEnabled()) {
+                    log.debug("Nutrient#" + id + " has refId:" + refId);
+                }
+                nutriRefMap.put(refId, id);
+            }
+            respNutrList = null;
+            respNutrBody = null;
+            jsonNutr = null;
+            
+            if (log.isDebugEnabled()) {
                 log.debug("==@ updating ingredient records start...");
             }
 
@@ -355,14 +387,7 @@ public class NutrixNutrientTransferRs27ToNutrixDB {
                         log.debug("      * " + nutrientRefId);
                     }
                     
-                    String nutrientId = RestAssured.
-                        given().
-                        contentType("application/json").
-                        expect().
-                        when().
-                        get(serviceUrl("nutrient/getbyref/" + nutrientRefId + "/" + NutrixConstants.USNNDB)).
-                        then().
-                        extract().path("id");
+                    String nutrientId = nutriRefMap.get(nutrientRefId);
                     
                     if (log.isDebugEnabled()) {
                         log.debug("      > " + nutrientId);
@@ -373,7 +398,8 @@ public class NutrixNutrientTransferRs27ToNutrixDB {
                         list.add(content);
                     }
                 }
-                
+                subrs.close();
+                subst.close();
                 item.setNutrientContentList(list);
                 
                 // try to get the ingredient object from nutriWS...
